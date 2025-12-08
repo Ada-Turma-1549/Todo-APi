@@ -2,11 +2,11 @@
   "profiles": {
     "PrimeiraApi": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "applicationUrl": "https://localhost:16519;http://localhost:16520"
+      "applicationUrl": "https://localhost:16519;http://localhost:16000"
     }
   }
 }
