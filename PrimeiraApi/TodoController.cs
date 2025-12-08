@@ -4,43 +4,76 @@ namespace PrimeiraApi
 {
     // P: O que faz a classe ser uma controller? 
     // R: Ela herda da classe ControllerBase
-    [Route("/api/todo")]
+    [Route("/api/todo")] 
     public class TodoController : ControllerBase
     {
+        private readonly AppDbContext appDbContext;
+
+        public TodoController(AppDbContext appDbContext)
+        {
+            this.appDbContext = appDbContext;
+        }
 
         // P: O que faz um método ser uma action?
         // R: Anotação de Rota / Método(Verbo): []
         [HttpGet]
         public ActionResult GetAll()
         {
-            return Ok(SimulatedDatabase.Todos);
+            return Ok(appDbContext.Todos);
         }
 
         [HttpGet("{id}")]
         public ActionResult GetById(int id)
         {
-            var mensagem = "Retorna os detalhes da tarefa com ID = " + id;
-            return Ok(mensagem);
+            var todo = appDbContext.Todos.Find(id);
+
+            if (todo == null)
+                return NotFound();
+            
+            return Ok(todo);
         }
 
         [HttpPost]
-        public ActionResult Create(TodoItem item)
+        public ActionResult Create([FromBody] TodoItem item)
         {
-            // item e adicionar o banco de dados.
-            return Ok(item);
+            appDbContext.Todos.Add(item);
+            appDbContext.SaveChanges();
+
+            return Create(item);
         }
 
         [HttpDelete("{id}")]
         public ActionResult DeleteById(int id)
         {
-            return Ok();
+            var todo = appDbContext.Todos.Find(id);
+            if (todo == null)
+                return NotFound();
+
+            appDbContext.Todos.Remove(todo);
+            appDbContext.SaveChanges();
+
+            return NoContent();
         }
 
 
         [HttpPut("{id}")]
-        public ActionResult Update(int id, TodoItem item)
+        public ActionResult Update(int id, [FromBody] TodoItem item)
         {
-            return Ok();
+            if (id != item.Id)
+                return BadRequest();
+
+            var existing = appDbContext.Todos.Find(id);
+            if (existing == null)
+                return NotFound();
+
+            existing.Title = item.Title;
+            existing.Description = item.Description;
+            existing.IsFinished = item.IsFinished;
+
+            appDbContext.Todos.Update(existing);
+            appDbContext.SaveChanges();
+
+            return NoContent();
         }
     }
 }
