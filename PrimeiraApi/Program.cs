@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using PrimeiraApi.Middlewares;
 using System;
 using System.IO;
 using System.Reflection;
@@ -9,6 +10,8 @@ namespace PrimeiraApi
 {
     internal class Program
     {
+        const string CORS_POLICY_NAME = "PoliticaPadrao";
+
         static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder();
@@ -41,9 +44,23 @@ namespace PrimeiraApi
                 options.IncludeXmlComments(xmlFile);
             });
 
+            builder.Services.AddCors(option =>
+            {
+                option.AddPolicy(CORS_POLICY_NAME, policy =>
+                {
+                    policy.AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .WithOrigins("http://localhost:3001");
+                });
+            });
+
             //Swagger -> ferramenta pra gerar a documentação da API no formato Open API
 
             var app = builder.Build();
+
+            app.UseMiddleware<MaintenanceMiddleware>();
+            app.UseMiddleware<DemoMiddleware>();
+            app.UseCors(CORS_POLICY_NAME);
             app.UseSwagger();
             app.UseSwaggerUI();
 
