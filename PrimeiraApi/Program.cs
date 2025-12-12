@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi;
+using PrimeiraApi.Filters;
 using PrimeiraApi.Middlewares;
 using System;
 using System.IO;
@@ -16,7 +17,13 @@ namespace PrimeiraApi
         {
             var builder = WebApplication.CreateBuilder();
             // 1 - Configurar a Injeção de Dependência: sempre feito no builder.Services
-            builder.Services.AddControllers();
+            builder.Services.Configure<TenantConfiguration>(builder.Configuration.GetSection("TenantConfiguration"));
+            builder.Services.AddControllers(x => 
+            {
+                x.Filters.Add<ProblemDetailsFilter>();
+                x.Filters.Add<TenantFilter>();
+            });
+
             builder.Services.AddDbContext<AppDbContext>();
             builder.Services.AddSwaggerGen((options) =>
             {
@@ -43,7 +50,6 @@ namespace PrimeiraApi
                 var xmlFile = Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
                 options.IncludeXmlComments(xmlFile);
             });
-
             builder.Services.AddCors(option =>
             {
                 option.AddPolicy(CORS_POLICY_NAME, policy =>
@@ -53,6 +59,7 @@ namespace PrimeiraApi
                     .WithOrigins("http://localhost:3001");
                 });
             });
+            builder.Services.AddProblemDetails();
 
             //Swagger -> ferramenta pra gerar a documentação da API no formato Open API
 
@@ -63,8 +70,6 @@ namespace PrimeiraApi
             app.UseCors(CORS_POLICY_NAME);
             app.UseSwagger();
             app.UseSwaggerUI();
-
-            // 2 - Aplicar/Usar as Dependências: app
             app.MapControllers();
 
             app.Run();

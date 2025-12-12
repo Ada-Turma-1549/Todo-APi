@@ -46,8 +46,9 @@ namespace PrimeiraApi
             var todo = appDbContext.Todos.Find(id);
 
             if (todo == null)
-                return NotFound();
-            
+                //return NotFound(); // Retorna um StatusCodeResult
+                return new ObjectResult($"Tarefa com Id {id} não encontrada") { StatusCode = StatusCodes.Status404NotFound }; // Retorna um ObjectResult
+
             return Ok(todo);
         }
 
